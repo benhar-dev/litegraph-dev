@@ -6,11 +6,14 @@ It is recommended to install and use vscode as an editor.
 
 ## Getting started
 
+### Prerequisite 
+You must have both Git and Node.js installed on your computer.  
+
 ### Clone
 First clone this repo to your local computer.
 
 ### Install
-In order to install this tool-set you must execute the following command inside the route of the new folder.  Please note, you will need to have a minimum of read access to the vision-toolkit repo before running this command!
+Execute the following command inside the root of the new folder.  Please note, you will need to have a minimum of read access to the vision-toolkit repo before running this command.
 ```
 npm run dev-install
 ```
