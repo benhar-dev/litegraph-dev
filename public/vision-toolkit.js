@@ -1,23 +1,21 @@
 console.log('Loaded: TcHmi.js');
-// add code here to mimic TcHmi if needed.
 
 TcHmi = {};
 TcHmi.Functions = {};
 TcHmi.Functions.registerFunctionEx = function (name, project, callback) {
-    console.log('TcHmi: Registered Function');
-    console.log(name);
-    console.log(project);
-    console.log(callback);
+    // console.log('TcHmi: Registered Function');
+    // console.log(name);
+    // console.log(project);
+    // console.log(callback);
 }
 
 TcHmi.Server = {};
 TcHmi.Server.writeSymbol = function (symbolName, symbolValue) {
-    console.log('TcHmi: Write Symbol');
-    console.log(symbolName);
-    console.log(symbolValue);
+    // console.log('TcHmi: Write Symbol');
+    // console.log(symbolName);
+    // console.log(symbolValue);
 }
 console.log('Loaded: pre-graphframework.js');
-// add code here to be included pre-graphframework customize install
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
@@ -187,9 +185,7 @@ var GraphFrameworkCustomisation = (function () {
     })(Functions = TcHmi.Functions || (TcHmi.Functions = {}));
 })(TcHmi);
 console.log('Loaded: post-graphframework.js');
-// add code here to be included pre-graphframework customize install
 console.log('Loaded: pre-nodepack.js');
-// add code here to be included pre-node pack install
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
@@ -1719,5 +1715,37 @@ function TcVnParamsBlobDetection() {
 }
 
 TcVnParamsBlobDetection.size = [400, 565];
+console.log('Loaded: litegraph-dev-nodepack.js');
+
+var LitegraphDev = (function () {
+
+    return {
+
+        RegisterWithGraph: function (GraphFramework) {
+
+             GraphFramework.registerNodeType("Demo/DemoNode", DemoNode);
+        
+            }
+    }
+})();
+
+
 console.log('Loaded: post-nodepack.js');
-// add code here to be included post-nodepack install
+
+function DemoNode() {
+
+    this.onPropertyChanged = updatePlc;
+
+    this.addInput("ipSrcImage", "ITcVnImage");
+    this.addOutput("ipDestImage", "ITcVnImage");
+    this.properties = { demoValue: 3};
+
+    this.number = this.addWidget(
+        "number",
+        "Demo Value",
+        3,
+        function (v) { },
+        { property: "demoValue", min: 0, max: 1000 }
+    );
+
+}

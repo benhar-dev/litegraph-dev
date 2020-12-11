@@ -24,6 +24,7 @@ module.exports = function (grunt) {
           './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/*/**.js', 
           './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/*/*/**.js', 
           './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/*/*/*/**.js', 
+          './src/litegraph-dev-nodepack.js',
           './src/post-nodepack.js'
           ],
         dest: './public/vision-toolkit.js'
