@@ -27,7 +27,7 @@ npm run start
 You can now view the live site by navigating to "http://127.0.0.1:8000/index.html" (this should have already auto-started)
 
 ## Developing
-You can now modify the javascript files in src.
+You can now modify the javascript files in src and the webpage will automatically rebuild and reload on save.
 
 ## Update the sub-git repos
 Execute the following command.
