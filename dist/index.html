@@ -1,0 +1,61 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Litegraph Sandpit ben</title>
+  <meta name="description" content="The Litegraph Sandpit">
+  <meta name="author" content="benhar-dev">
+    <link rel="stylesheet" type="text/css" href="../litegraph.js/css/litegraph.css">
+    <script src="../litegraph.js/src/litegraph.js"></script>
+    <script src="main.js"></script>
+</head>
+
+<body>
+
+    <div class="litegraph" style="height: 100%; width: 100%">
+        <canvas id="mycanvas" height="3000" width="3000"></canvas>
+    </div>
+
+    <script>
+
+        var graph = new LGraph();
+        var canvas = new LGraphCanvas("#mycanvas", graph);
+
+        canvas.render_canvas_border = false;
+
+        var configurePlc = function () {
+            graph.uuid = generateUUID();
+            var graphJson = JSON.stringify(graph.serialize());
+            console.log(graphJson);
+            TcHmi.Server.writeSymbol('PLC1.MAIN.graphApi.receivedGraphJson', graphJson);
+        }
+
+        var updatePlc = function () {
+            var graphJson = JSON.stringify(graph.serialize());
+            TcHmi.Server.writeSymbol('PLC1.MAIN.graphApi.receivedGraphJson', graphJson);
+        }
+
+        GraphFrameworkCustomisation.Initialise(LiteGraph);
+        DebugNodePack.RegisterWithGraph(LiteGraph);
+        VisionNodePack.RegisterWithGraph(LiteGraph);
+
+        graph.onNodeAdded = configurePlc;
+        graph.onNodeRemoved = configurePlc;
+        graph.onNodeConnectionChange = configurePlc;
+        graph.onSerialize = function (data) {
+            data.uuid = graph.uuid;
+        }
+
+        canvas.resize();
+        window.addEventListener("resize", function () { canvas.resize(); });
+
+        graph.start();
+
+    </script>
+
+
+
+ </body>
+</html>
