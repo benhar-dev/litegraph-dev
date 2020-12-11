@@ -1,17 +1,21 @@
 # Litegraph - GraphFramework Dev Toolset
 
 ## Getting started
-In order to use this tool you must execute the following two commands
+
+### Clone
+First clone this repo to your local computer.
+
+### Install
+In order to install this tool-set you must execute the following command inside the route of the new folder.  Please note, you will need to have a minimum of read access to the vision-toolkit repo before running this command!
 ```
-git submodule init
-git submodule update
+npm run install
 ```
 
-This will bring both the litegraph and vision-toolkit repos in to this repo. 
+### Check it is working
+Execute the following command to start the development tools.
+```
+npm run start
+```
 
-## Changing branches on the sub-repo
-To work with a different vision-toolkit branch you must use the following commands
-```
-git config -f .gitmodules submodule.vision-toolkit.branch myBranchName
-git submodule update --remote
-```
+You can now view the live site by navigating to "http://127.0.0.1:8000/index.html"
+
