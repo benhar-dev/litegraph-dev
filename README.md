@@ -17,13 +17,14 @@ Execute the following command to start the development tools.
 npm run start
 ```
 
-You can now view the live site by navigating to "http://127.0.0.1:8000/index.html"
+You can now view the live site by navigating to "http://127.0.0.1:8000/index.html" (this should have already auto-started)
 
-### Update the sub-git repos
+## Developing
+You can now modify the javascript files in src.
+
+## Update the sub-git repos
 Execute the following command.
 ```
 npm run dev-update
 ```
 
-## Developing
-You can now modify the javascript files in src.
