@@ -4,9 +4,18 @@ console.log('Loaded: TcHmi.js');
 TcHmi = {};
 TcHmi.Functions = {};
 TcHmi.Functions.registerFunctionEx = function (name, project, callback) {
-    console.log('TcHmi: Registered Function - ' + name);
+    console.log('TcHmi: Registered Function');
+    console.log(name);
+    console.log(project);
+    console.log(callback);
 }
-Functions = TcHmi.Functions;
+
+TcHmi.Server = {};
+TcHmi.Server.writeSymbol = function (symbolName, symbolValue) {
+    console.log('TcHmi: Write Symbol');
+    console.log(symbolName);
+    console.log(symbolValue);
+}
 console.log('Loaded: pre-graphframework.js');
 // add code here to be included pre-graphframework customize install
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.

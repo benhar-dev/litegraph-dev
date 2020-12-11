@@ -28,7 +28,6 @@
             var configurePlc = function () {
                 graph.uuid = generateUUID();
                 var graphJson = JSON.stringify(graph.serialize());
-                console.log(graphJson);
                 TcHmi.Server.writeSymbol('PLC1.MAIN.graphApi.receivedGraphJson', graphJson);
             }
 
