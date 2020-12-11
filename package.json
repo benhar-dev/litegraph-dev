@@ -5,8 +5,8 @@
   "main": "litegraph.js",
   "scripts": {
     "start": "npm run build & start http://localhost:8000/index.html & npm run live",
-    "install": "git submodule update --init --recursive && npm install",
-    "update": "git submodule update --recursive --remote",
+    "dev-install": "git submodule update --init --recursive && npm install",
+    "dev-update": "git submodule update --recursive --remote",
     "build": "grunt build",
     "watch": "grunt watch",
     "live": "concurrently --kill-others \"npm run watch\" \"nodemon utils/server.js\""
