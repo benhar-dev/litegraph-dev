@@ -1,4 +1,8 @@
 # Litegraph - GraphFramework Dev Toolset
+The tool-set is a small sandpit environment to assist with the development of litegraph components.  
+
+It is recommended to install and use vscode as an editor. 
+![Overview of dev tools](docs/images/overview.png)
 
 ## Getting started
 
