@@ -1,5 +1,3 @@
-console.log('Loaded: TcHmi.js');
-
 TcHmi = {};
 TcHmi.Functions = {};
 TcHmi.Functions.registerFunctionEx = function (name, project, callback) {
@@ -7,15 +5,14 @@ TcHmi.Functions.registerFunctionEx = function (name, project, callback) {
     // console.log(name);
     // console.log(project);
     // console.log(callback);
-}
+};
 
 TcHmi.Server = {};
 TcHmi.Server.writeSymbol = function (symbolName, symbolValue) {
     // console.log('TcHmi: Write Symbol');
     // console.log(symbolName);
     // console.log(symbolValue);
-}
-console.log('Loaded: pre-graphframework.js');
+};
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
@@ -184,8 +181,8 @@ var GraphFrameworkCustomisation = (function () {
         Functions.registerFunctionEx('UpdateNodeStatus', 'TcHmi.Functions.vision_toolkit_hmi', vision_toolkit_hmi.UpdateNodeStatus);
     })(Functions = TcHmi.Functions || (TcHmi.Functions = {}));
 })(TcHmi);
-console.log('Loaded: post-graphframework.js');
-console.log('Loaded: pre-nodepack.js');
+// this file is inserted just after the javascript files found in the vision-toolkit-hmi\Graphframework directory.  
+// use this file to add or manipulate the core litegraph before it is used in desktop.view.
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
@@ -1715,24 +1712,9 @@ function TcVnParamsBlobDetection() {
 }
 
 TcVnParamsBlobDetection.size = [400, 565];
-console.log('Loaded: litegraph-dev-nodepack.js');
+// Example node ------------------------------------------------------------------------
 
-var LitegraphDev = (function () {
-
-    return {
-
-        RegisterWithGraph: function (GraphFramework) {
-
-             GraphFramework.registerNodeType("Demo/DemoNode", DemoNode);
-        
-            }
-    }
-})();
-
-
-console.log('Loaded: post-nodepack.js');
-
-function DemoNode() {
+function SandpitNode() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1748,4 +1730,19 @@ function DemoNode() {
         { property: "demoValue", min: 0, max: 1000 }
     );
 
-}
+};
+
+// Example node registration -----------------------------------------------------------
+
+var SandpitNodePack = (function () {
+
+    return {
+
+        RegisterWithGraph: function (GraphFramework) {
+
+             GraphFramework.registerNodeType("Sandpit/SandpitNode", SandpitNode);
+        
+            }
+    }
+})();
+

@@ -13,19 +13,16 @@ module.exports = function (grunt) {
     concat: {
       build: {
         src: [
-          './src/tchmi.js',
-          './src/pre-graphframework.js',
+          './src/sandpit-tchmi.js',
           './vision-toolkit/vision-toolkit-hmi/GraphFramework/**.js',
-          './src/post-graphframework.js',
-          './src/pre-nodepack.js',
+          './src/sandpit-graphframework.js',
           './vision-toolkit/vision-toolkit-hmi/NodePacks/**.js', 
           './vision-toolkit/vision-toolkit-hmi/NodePacks/*/**.js', 
           './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/**.js', 
           './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/*/**.js', 
           './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/*/*/**.js', 
           './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/*/*/*/**.js', 
-          './src/litegraph-dev-nodepack.js',
-          './src/post-nodepack.js'
+          './src/sandpit-nodepack.js'
           ],
         dest: './public/vision-toolkit.js'
       }
