@@ -21,7 +21,7 @@ npm run dev-install
 ### Check it is working
 Execute the following command to start the development tools.
 ```
-npm run start
+npm start
 ```
 
 You can now view the live site by navigating to "http://127.0.0.1:8000/index.html" (this should have already auto-started)
