@@ -18,42 +18,8 @@
             <canvas id="mycanvas" height="3000" width="3000"></canvas>
         </div>
 
-        <script>
+        <script src="sandpit-desktop-view.js"></script>
 
-            var graph = new LGraph();
-            var canvas = new LGraphCanvas("#mycanvas", graph);
-
-            canvas.render_canvas_border = false;
-
-            var configurePlc = function () {
-                graph.uuid = generateUUID();
-                var graphJson = JSON.stringify(graph.serialize());
-                TcHmi.Server.writeSymbol('PLC1.MAIN.graphApi.receivedGraphJson', graphJson);
-            }
-
-            var updatePlc = function () {
-                var graphJson = JSON.stringify(graph.serialize());
-                TcHmi.Server.writeSymbol('PLC1.MAIN.graphApi.receivedGraphJson', graphJson);
-            }
-
-            GraphFrameworkCustomisation.Initialise(LiteGraph);
-            SandpitNodePack.RegisterWithGraph(LiteGraph);
-            DebugNodePack.RegisterWithGraph(LiteGraph);
-            VisionNodePack.RegisterWithGraph(LiteGraph);
-
-            graph.onNodeAdded = configurePlc;
-            graph.onNodeRemoved = configurePlc;
-            graph.onNodeConnectionChange = configurePlc;
-            graph.onSerialize = function (data) {
-                data.uuid = graph.uuid;
-            }
-
-            canvas.resize();
-            window.addEventListener("resize", function () { canvas.resize(); });
-
-            graph.start();
-
-        </script>
         <script src="//localhost:1030/livereload.js"></script>
     </body>
 </html>
