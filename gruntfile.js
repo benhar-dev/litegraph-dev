@@ -15,6 +15,8 @@ module.exports = function (grunt) {
         src: [
           './src/sandpit-tchmi.js',
           './vision-toolkit/vision-toolkit-hmi/GraphFramework/**.js',
+          './vision-toolkit/vision-toolkit-hmi/GraphFramework/*/**.js',
+          './vision-toolkit/vision-toolkit-hmi/GraphFramework/*/*/**.js',
           './src/sandpit-graphframework.js',
           './vision-toolkit/vision-toolkit-hmi/NodePacks/**.js', 
           './vision-toolkit/vision-toolkit-hmi/NodePacks/*/**.js', 
