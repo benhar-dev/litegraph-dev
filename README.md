@@ -41,9 +41,3 @@ This mimics the standard desktop-view javascript in the vision-toolkit project. 
 ### sandpit-tchmi
 This mimics the standard TcHmi class.  You can add debugging here if required.  Handy for monitoring readEx.
 
-## Update the sub-git repos
-Execute the following command.
-```
-npm run dev-update
-```
-
