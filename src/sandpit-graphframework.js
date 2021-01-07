@@ -16,7 +16,7 @@ LGraphCanvas.onMenuAdd = function (node, options, e, prev_menu, callback) {
             if (name.indexOf("::") != -1) //in case it has a namespace like "shader::math/rand" it hides the namespace
                 name = name.split("::")[1];
             if (name.indexOf("/") != -1) // looking for additional categories
-                name = name.split("/")[1];
+                name = name.split("/")[0];
             const ind = entries.findIndex(entry => entry.content === name);
             if (ind === -1) {
                 entries.push({ value: values[i], content: name, has_submenu: true });
