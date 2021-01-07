@@ -1,22 +1,10 @@
 ﻿// Example node ------------------------------------------------------------------------
 
-function SandpitNode() {
-
-    this.onPropertyChanged = updatePlc;
-
-    this.addInput("ipSrcImage", "ITcVnImage");
-    this.addOutput("ipDestImage", "ITcVnImage");
-    this.properties = { demoValue: 3};
-
-    this.number = this.addWidget(
-        "number",
-        "Demo Value",
-        3,
-        function (v) { },
-        { property: "demoValue", min: 0, max: 1000 }
-    );
-
-};
+function Node_Multiply() {};
+function Node_Divide() {};
+function Node_Sin() {};
+function Node_Cos() {};
+function Node_Concat() {};
 
 // Example node registration -----------------------------------------------------------
 
@@ -26,9 +14,13 @@ var SandpitNodePack = (function () {
 
         RegisterWithGraph: function (GraphFramework) {
 
-             GraphFramework.registerNodeType("Sandpit/SandpitNode", SandpitNode);
+             GraphFramework.registerNodeType("Numbers/Node_Multiply", Node_Multiply);
+             GraphFramework.registerNodeType("Numbers/Node_Divide", Node_Divide);
+             GraphFramework.registerNodeType("Numbers/Trigonometry/Node_Sin", Node_Sin);
+             GraphFramework.registerNodeType("Numbers/Trigonometry/Node_Cos", Node_Cos);
+             GraphFramework.registerNodeType("Strings/Concat", Node_Concat);
         
-            }
+        }
     }
 })();
 

@@ -326,36 +326,66 @@ function generateUUID() { // Public Domain/MIT
 // this file is inserted just after the javascript files found in the vision-toolkit-hmi\Graphframework directory.  
 // use this file to add or manipulate the core litegraph before it is used in desktop.view.
 
-LGraphCanvas.onMenuAdd = function(node, options, e, prev_menu, callback) {
+LGraphCanvas.onMenuAdd = function (node, options, e, prev_menu, callback) {
     var canvas = LGraphCanvas.active_canvas;
     var ref_window = canvas.getCanvasWindow();
     var graph = canvas.graph;
-    if(!graph)
+    if (!graph)
         return;
 
-    var values = LiteGraph.getNodeTypesCategories( canvas.filter || graph.filter );
+    var values = LiteGraph.getNodeTypesCategories(canvas.filter || graph.filter);
     var entries = [];
-    for (var i=0; i < values.length; i++) {
+    for (var i = 0; i < values.length; i++) {
         if (values[i]) {
             var name = values[i];
-            if(name.indexOf("::") != -1) //in case it has a namespace like "shader::math/rand" it hides the namespace
+            if (name.indexOf("::") != -1) //in case it has a namespace like "shader::math/rand" it hides the namespace
                 name = name.split("::")[1];
-            if(name.indexOf("/") != -1) 
-                name = name.split("/")[0];
-            console.log(name);
-            entries.push({ value: values[i], content: name, has_submenu: true });
+            if (name.indexOf("/") != -1) // looking for additional categories
+                name = name.split("/")[1];
+            const ind = entries.findIndex(entry => entry.content === name);
+            if (ind === -1) {
+                entries.push({ value: values[i], content: name, has_submenu: true });
+            }
         }
     }
 
     //show categories
-    var menu = new LiteGraph.ContextMenu( entries, { event: e, callback: inner_clicked, parentMenu: prev_menu }, ref_window );
+    //        var menu = new LiteGraph.ContextMenu(entries, { event: e, callback: inner_clicked, parentMenu: prev_menu }, ref_window);
+    var menu = new LiteGraph.ContextMenu(entries, { event: e, callback: inner_onMenuAdded, parentMenu: prev_menu }, ref_window);
+
+    function inner_onMenuAdded(node, options, e) {
+        var values = LiteGraph.getNodeTypesInCategory(node.value, canvas.filter || graph.filter);
+        let topOffset = 0;
+        if (values.length > 0) {
+            const valuesMenu = inner_clicked(node, options, e);
+            topOffset = valuesMenu.root.clientHeight;
+        }
+
+        const baseCategory = node.value + "/";
+        let moreDirectories = LiteGraph.getNodeTypesCategories().filter(cats => cats.indexOf(baseCategory) === 0);
+
+        var entries = [];
+        for (var i = 0; i < values.length; i++) {
+            if (moreDirectories[i]) {
+                var name = moreDirectories[i].substr(baseCategory.length, moreDirectories[i].length - baseCategory.length);
+                if (name.indexOf("::") != -1) //in case it has a namespace like "shader::math/rand" it hides the namespace
+                    name = name.split("::")[1];
+                if (name.indexOf("/") != -1) //in case it has a namespace like "shader::math/rand" it hides the namespace
+                    name = name.split("/")[1];
+                entries.push({ value: moreDirectories[i], content: name, has_submenu: true });
+            }
+        }
+
+        menu = new LiteGraph.ContextMenu(entries, { event: e, callback: inner_onMenuAdded, parentMenu: menu, top_offset: topOffset }, ref_window);
+
+        return false;
+    }
 
     function inner_clicked(v, option, e) {
-        console.log(v);
         var category = v.value;
-        var node_types = LiteGraph.getNodeTypesInCategory( category, canvas.filter || graph.filter );
+        var node_types = LiteGraph.getNodeTypesInCategory(category, canvas.filter || graph.filter);
         var values = [];
-        for (var i=0; i < node_types.length; i++) {
+        for (var i = 0; i < node_types.length; i++) {
             if (!node_types[i].skip_list) {
                 values.push({
                     content: node_types[i].title,
@@ -364,8 +394,7 @@ LGraphCanvas.onMenuAdd = function(node, options, e, prev_menu, callback) {
             }
         }
 
-        new LiteGraph.ContextMenu( values, { event: e, callback: inner_create, parentMenu: menu }, ref_window );
-        return false;
+        return new LiteGraph.ContextMenu(values, { event: e, callback: inner_create, parentMenu: menu }, ref_window);
     }
 
     function inner_create(v, e) {
@@ -376,7 +405,7 @@ LGraphCanvas.onMenuAdd = function(node, options, e, prev_menu, callback) {
             node.pos = canvas.convertEventToCanvasOffset(first_event);
             canvas.graph.add(node);
         }
-        if(callback)
+        if (callback)
             callback(node);
         canvas.graph.afterChange();
     }
@@ -392,7 +421,27 @@ var DebugNodePack = (function () {
 
         RegisterWithGraph: function (GraphFramework) {
 
-            GraphFramework.registerNodeType("Debug/Playground", Playground);
+            GraphFramework.registerNodeType("Debug/Playground", Node_Playground);
+
+        }
+    }
+})();
+
+
+// Keep these lines for a best effort IntelliSense of Visual Studio 2017.
+/// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
+
+var PlcBasicNodePack = (function () {
+
+    return {
+
+        RegisterWithGraph: function (GraphFramework) {
+
+            // Literals        
+            GraphFramework.registerNodeType("PLC Basic/String Literal", Node_StringLiteral);
+
+            // StringFunctions
+            GraphFramework.registerNodeType("PLC Basic/Concat", Node_Concat);
 
         }
     }
@@ -409,47 +458,47 @@ var VisionNodePack = (function () {
         RegisterWithGraph: function (GraphFramework) {
 
             // TcHmi Views
-            GraphFramework.registerNodeType("TcHMI/ViewITcVnImage", ViewITcVnImage);
-            GraphFramework.registerNodeType("TcHMI/DragDropLocalTcVnImage", DragDropLocalTcVnImage);
+            GraphFramework.registerNodeType("TcHMI/ViewITcVnImage", Node_ViewITcVnImage);
+            GraphFramework.registerNodeType("TcHMI/DragDropLocalTcVnImage", Node_DragDropLocalTcVnImage);
 
             // Basic Image Operations
-            GraphFramework.registerNodeType("Basic Image Operations/F_VN_CopyImage", F_VN_CopyImage);
-            GraphFramework.registerNodeType("Basic Image Operations/F_VN_CopyIntoDisplayableImage", F_VN_CopyIntoDisplayableImage);
+            GraphFramework.registerNodeType("Basic Image Operations/F_VN_CopyImage", Node_F_VN_CopyImage);
+            GraphFramework.registerNodeType("Basic Image Operations/F_VN_CopyIntoDisplayableImage", Node_F_VN_CopyIntoDisplayableImage);
 
             // Code Reading
-            GraphFramework.registerNodeType("Code Reading/F_VN_ReadDataMatrixCode", F_VN_ReadDataMatrixCode);
-            GraphFramework.registerNodeType("Code Reading/F_VN_ReadQRCode", F_VN_ReadQRCode);
+            GraphFramework.registerNodeType("Code Reading/F_VN_ReadDataMatrixCode", Node_F_VN_ReadDataMatrixCode);
+            GraphFramework.registerNodeType("Code Reading/F_VN_ReadQRCode", Node_F_VN_ReadQRCode);
 
             // Drawing
-            GraphFramework.registerNodeType("Drawing/F_VN_PutLabel", F_VN_PutLabel);
-            GraphFramework.registerNodeType("Drawing/F_VN_DrawContours", F_VN_DrawContours);
+            GraphFramework.registerNodeType("Drawing/F_VN_PutLabel", Node_F_VN_PutLabel);
+            GraphFramework.registerNodeType("Drawing/F_VN_DrawContours", Node_F_VN_DrawContours);
 
             // Image Acquisition
-            GraphFramework.registerNodeType("Image Acquisition/FB_VN_SimpleCameraControl", FB_VN_SimpleCameraControl);
+            GraphFramework.registerNodeType("Image Acquisition/FB_VN_SimpleCameraControl", Node_FB_VN_SimpleCameraControl);
 
             // Geometric and Coordinate Transformations
-            GraphFramework.registerNodeType("Geometric and Coordinate Transformations/F_VN_FlipImage", F_VN_FlipImage);
-            GraphFramework.registerNodeType("Geometric and Coordinate Transformations/TVG_Rotate", TVG_Rotate);
+            GraphFramework.registerNodeType("Geometric and Coordinate Transformations/F_VN_FlipImage", Node_F_VN_FlipImage);
+            GraphFramework.registerNodeType("Geometric and Coordinate Transformations/TVG_Rotate", Node_TVG_Rotate);
 
             // Image Segmentation
-            GraphFramework.registerNodeType("Image Segmentation/F_VN_Threshold", F_VN_Threshold);
+            GraphFramework.registerNodeType("Image Segmentation/F_VN_Threshold", Node_F_VN_Threshold);
 
             // Image Filtering
-            GraphFramework.registerNodeType("Image Filtering/F_VN_FillHoles", F_VN_FillHoles);
-            GraphFramework.registerNodeType("Image Filtering/F_VN_GaussianFilter", F_VN_GaussianFilter);
-            GraphFramework.registerNodeType("Image Filtering/F_VN_MedianFilter", F_VN_MedianFilter);
+            GraphFramework.registerNodeType("Image Filtering/F_VN_FillHoles", Node_F_VN_FillHoles);
+            GraphFramework.registerNodeType("Image Filtering/F_VN_GaussianFilter", Node_F_VN_GaussianFilter);
+            GraphFramework.registerNodeType("Image Filtering/F_VN_MedianFilter", Node_F_VN_MedianFilter);
 
             // Image Colour and Contrast Processing
-            GraphFramework.registerNodeType("Image Colour and Contrast Processing/F_VN_InvertImageColor", F_VN_InvertImageColor);
-            GraphFramework.registerNodeType("Image Colour and Contrast Processing/F_VN_GenerateColorMap", F_VN_GenerateColorMap);
-            GraphFramework.registerNodeType("Image Colour and Contrast Processing/F_VN_ApplyColorMap", F_VN_ApplyColorMap);
-            GraphFramework.registerNodeType("Image Colour and Contrast Processing/F_VN_NormalizeImage", F_VN_NormalizeImage);
+            GraphFramework.registerNodeType("Image Colour and Contrast Processing/F_VN_ConvertColorSpace", Node_F_VN_ConvertColorSpace);
+            GraphFramework.registerNodeType("Image Colour and Contrast Processing/F_VN_InvertImageColor", Node_F_VN_InvertImageColor);
+            GraphFramework.registerNodeType("Image Colour and Contrast Processing/F_VN_GenerateColorMap", Node_F_VN_GenerateColorMap);
+            GraphFramework.registerNodeType("Image Colour and Contrast Processing/F_VN_ApplyColorMap", Node_F_VN_ApplyColorMap);
+            GraphFramework.registerNodeType("Image Colour and Contrast Processing/F_VN_NormalizeImage", Node_F_VN_NormalizeImage);
 
             // Image Analysis - Object Detection
-            GraphFramework.registerNodeType("Image Analysis - Object Detection/F_VN_DetectBlobs", F_VN_DetectBlobs);
-            GraphFramework.registerNodeType("Image Analysis - Object Detection/TcVnParamsBlobDetection", TcVnParamsBlobDetection);
-            GraphFramework.registerNodeType("Image Analysis - Object Detection/F_VN_MatchTemplate", F_VN_MatchTemplate);
-            
+            GraphFramework.registerNodeType("Image Analysis - Object Detection/F_VN_DetectBlobs", Node_F_VN_DetectBlobs);
+            GraphFramework.registerNodeType("Image Analysis - Object Detection/TcVnParamsBlobDetection", Node_TcVnParamsBlobDetection);
+            GraphFramework.registerNodeType("Image Analysis - Object Detection/F_VN_MatchTemplate", Node_F_VN_MatchTemplate);   
 
         }
     }
@@ -1190,6 +1239,28 @@ numberWidget = function (node, propertyName, initialValue) {
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
+stringLiteralWidget = function (node, propertyName, initialValue) {
+
+    if (initialValue === undefined) {
+        initialValue = '';
+    }
+
+    node.properties = node.properties || {};
+    node.properties[propertyName] = initialValue;
+
+    return node.addWidget(
+            "text",
+            "String",
+            initialValue,
+            function (v) { },
+            { property: propertyName }
+        );
+
+}
+
+// Keep these lines for a best effort IntelliSense of Visual Studio 2017.
+/// <reference path="../../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
+
 textPositionXWidget = function (node, propertyName, initialValue) {
 
     if (initialValue === undefined) {
@@ -1341,7 +1412,7 @@ thresholdTypeWidget = function (node, propertyName, initialValue) {
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function Playground() {
+function Node_Playground() {
 
     this.panel = {};
 
@@ -1352,9 +1423,7 @@ function Playground() {
     var panel = document.createElement("div");
     panel.className = "graphdialog rounded";
     panel.innerHTML = "<span class='name'></span> <input autofocus type='text' class='value'/><button class='rounded'>OK</button>";
-   
 
-  
     var graphcanvas = LGraphCanvas.active_canvas;
     var canvas = graphcanvas.canvas;
 
@@ -1380,16 +1449,13 @@ function Playground() {
     
 }
 
-Playground.prototype.onDrawForeground = function (ctx) {
+Node_Playground.prototype.onDrawForeground = function (ctx) {
     //console.log(LiteGraph.scale());
-
     //this.panel.style.visibility = "hidden";
-
     //this.panel.style.transform = "scale(" + LiteGraph.scale() + ")";
-
-
 }
 
+Node_Playground.title = "Playground";
 
 /*
 
@@ -1423,47 +1489,78 @@ Node port color
 
 */
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
+/// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
+
+function Node_StringLiteral() {
+
+    this.onPropertyChanged = updatePlc;
+
+    this.stringLiteral = stringLiteralWidget(this, "StringLiteral");
+
+    this.addOutput("StringLiteral", "STRING");
+
+}
+
+Node_StringLiteral.title = "StringLiteral";
+// Keep these lines for a best effort IntelliSense of Visual Studio 2017.
+/// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
+
+function Node_Concat() {
+
+    this.addInput("Str1", "STRING");
+    this.addInput("Str2", "STRING");
+    this.addOutput("Concat", "STRING");
+
+}
+
+Node_Concat.title = "Concat";
+// Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_CopyImage() {
+function Node_F_VN_CopyImage() {
 
     this.addInput("ipSrcImage", "ITcVnImage");
     this.addOutput("ipDestImage", "ITcVnImage");
 }
 
+Node_F_VN_CopyImage.title = "F_VN_CopyImage";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_CopyIntoDisplayableImage() {
+function Node_F_VN_CopyIntoDisplayableImage() {
 
     this.addInput("ipSrcImage", "ITcVnImage");
 
 }
+
+Node_F_VN_CopyIntoDisplayableImage.title = "F_VN_CopyIntoDisplayableImage";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_ReadDataMatrixCode() {
+function Node_F_VN_ReadDataMatrixCode() {
 
     this.addInput("ipSrcImage", "ITcVnImage");
     this.addOutput("DMCode", "String");
 }
 
-F_VN_ReadDataMatrixCode.size = [220, 30];
+Node_F_VN_ReadDataMatrixCode.title = "F_VN_ReadDataMatrixCode";
+Node_F_VN_ReadDataMatrixCode.size = [220, 30];
 
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_ReadQRCode() {
+function Node_F_VN_ReadQRCode() {
 
     this.addInput("ipSrcImage", "ITcVnImage");
     this.addOutput("QRCode", "String");
 }
 
-F_VN_ReadQRCode.size = [200, 30];
+Node_F_VN_ReadQRCode.title = "F_VN_ReadQRCode";
+Node_F_VN_ReadQRCode.size = [200, 30];
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_DrawContours() {
+function Node_F_VN_DrawContours() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1477,11 +1574,11 @@ function F_VN_DrawContours() {
     this.thicknessWidget = thicknessWidget(this, "nThickness");
 }
 
-
+Node_F_VN_DrawContours.title = "F_VN_DrawContours";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_PutLabel() {
+function Node_F_VN_PutLabel() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1494,11 +1591,11 @@ function F_VN_PutLabel() {
     this.textScale = textScaleWidget(this, "Scale");
 }
 
-
+Node_F_VN_PutLabel.title = "F_VN_PutLabel";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_FlipImage() {
+function Node_F_VN_FlipImage() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1509,12 +1606,13 @@ function F_VN_FlipImage() {
 
 }
 
-F_VN_FlipImage.size = [220, 55];
+Node_F_VN_FlipImage.title = "F_VN_FlipImage";
+Node_F_VN_FlipImage.size = [220, 55];
 
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function TVG_Rotate() {
+function Node_TVG_Rotate() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1548,34 +1646,268 @@ function TVG_Rotate() {
 
 }
 
-TVG_Rotate.size = [250, 110];
+Node_TVG_Rotate.title = "TVG_Rotate";
+Node_TVG_Rotate.size = [250, 110];
 
 
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function FB_VN_SimpleCameraControl() {
+function Node_FB_VN_SimpleCameraControl() {
 
     this.addOutput("ipSrcImage", "ITcVnImage");
 
 }
 
-FB_VN_SimpleCameraControl.size = [240, 40];
+Node_FB_VN_SimpleCameraControl.title = "FB_VN_SimpleCameraControl";
+Node_FB_VN_SimpleCameraControl.size = [240, 40];
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_ApplyColorMap() {
+function Node_F_VN_ApplyColorMap() {
 
     this.addInput("ipSrcImage", "ITcVnImage");
     this.addInput("ipColorMap", "ITcVnContainer");
     this.addOutput("ipDestImage", "ITcVnImage");
 }
 
-
+Node_F_VN_ApplyColorMap.title = "F_VN_ApplyColorMap";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_GenerateColorMap() {
+function Node_F_VN_ConvertColorSpace() {
+
+    this.onPropertyChanged = updatePlc;
+
+    this.addInput("ipSrcImage", "ITcVnImage");
+    this.addOutput("ipDestImage", "ITcVnImage");
+    this.properties = { ColorSpaceTransform: "TCVN_CST_RGBA_TO_GRAY" };
+
+    this.combo = this.addWidget(
+        "combo",
+        "Type",
+        "TCVN_CST_RGBA_TO_GRAY",
+        function (v) { },
+        {
+            property: "ColorSpaceTransform",
+            values: [
+
+            "TCVN_CST_BGR_TO_BGRA",
+            "TCVN_CST_RGB_TO_RGBA",
+            "TCVN_CST_BGRA_TO_BGR",
+            "TCVN_CST_RGBA_TO_RGB",
+            "TCVN_CST_BGR_TO_RGBA",
+            "TCVN_CST_RGB_TO_BGRA",
+            "TCVN_CST_BGRA_TO_RGB",
+            "TCVN_CST_RGBA_TO_BGR",
+            "TCVN_CST_BGR_TO_RGB",
+            "TCVN_CST_RGB_TO_BGR",
+            "TCVN_CST_BGRA_TO_RGBA",
+            "TCVN_CST_RGBA_TO_BGRA",
+            "TCVN_CST_BGR_TO_GRAY",
+            "TCVN_CST_RGB_TO_GRAY",
+            "TCVN_CST_GRAY_TO_BGR",
+            "TCVN_CST_GRAY_TO_RGB",
+            "TCVN_CST_GRAY_TO_BGRA",
+            "TCVN_CST_GRAY_TO_RGBA",
+            "TCVN_CST_BGRA_TO_GRAY",
+            "TCVN_CST_RGBA_TO_GRAY",
+            "TCVN_CST_RGB_TO_BGR_565",
+            "TCVN_CST_BGR_TO_BGR_565",
+            "TCVN_CST_BGR_565_TO_RGB",
+            "TCVN_CST_BGR_565_TO_BGR",
+            "TCVN_CST_RGBA_TO_BGR_565",
+            "TCVN_CST_BGRA_TO_BGR_565",
+            "TCVN_CST_BGR_565_TO_RGBA",
+            "TCVN_CST_BGR_565_TO_BGRA",
+            "TCVN_CST_GRAY_TO_BGR_565",
+            "TCVN_CST_BGR_565_TO_GRAY",
+            "TCVN_CST_RGB_TO_BGR_555",
+            "TCVN_CST_BGR_TO_BGR_555",
+            "TCVN_CST_BGR_555_TO_RGB",
+            "TCVN_CST_BGR_555_TO_BGR",
+            "TCVN_CST_RGBA_TO_BGR_555",
+            "TCVN_CST_BGRA_TO_BGR_555",
+            "TCVN_CST_BGR_555_TO_RGBA",
+            "TCVN_CST_BGR_555_TO_BGRA",
+            "TCVN_CST_GRAY_TO_BGR_555",
+            "TCVN_CST_BGR_555_TO_GRAY",
+            "TCVN_CST_BGR_TO_XYZ",
+            "TCVN_CST_RGB_TO_XYZ",
+            "TCVN_CST_XYZ_TO_BGR",
+            "TCVN_CST_XYZ_TO_RGB",
+            "TCVN_CST_BGR_TO_YCRCB",
+            "TCVN_CST_RGB_TO_YCRCB",
+            "TCVN_CST_YCRCB_TO_BGR",
+            "TCVN_CST_YCRCB_TO_RGB",
+            "TCVN_CST_BGR_TO_HSV",
+            "TCVN_CST_RGB_TO_HSV",
+            "TCVN_CST_BGR_TO_LAB",
+            "TCVN_CST_RGB_TO_LAB",
+            "TCVN_CST_BAYER_RG_TO_BGR",
+            "TCVN_CST_BAYER_BG_TO_RGB",
+            "TCVN_CST_BAYER_GR_TO_BGR",
+            "TCVN_CST_BAYER_GB_TO_RGB",
+            "TCVN_CST_BAYER_BG_TO_BGR",
+            "TCVN_CST_BAYER_RG_TO_RGB",
+            "TCVN_CST_BAYER_GB_TO_BGR",
+            "TCVN_CST_BAYER_GR_TO_RGB",
+            "TCVN_CST_BGR_TO_LUV",
+            "TCVN_CST_RGB_TO_LUV",
+            "TCVN_CST_BGR_TO_HLS",
+            "TCVN_CST_RGB_TO_HLS",
+            "TCVN_CST_HSV_TO_BGR",
+            "TCVN_CST_HSV_TO_RGB",
+            "TCVN_CST_LAB_TO_BGR",
+            "TCVN_CST_LAB_TO_RGB",
+            "TCVN_CST_LUV_TO_BGR",
+            "TCVN_CST_LUV_TO_RGB",
+            "TCVN_CST_HLS_TO_BGR",
+            "TCVN_CST_HLS_TO_RGB",
+            "TCVN_CST_BAYER_RG_TO_BGR_VNG",
+            "TCVN_CST_BAYER_GR_TO_BGR_VNG",
+            "TCVN_CST_BAYER_BG_TO_BGR_VNG",
+            "TCVN_CST_BAYER_GB_TO_BGR_VNG",
+            "TCVN_CST_BAYER_RG_TO_RGB_VNG",
+            "TCVN_CST_BAYER_GR_TO_RGB_VNG",
+            "TCVN_CST_BAYER_BG_TO_RGB_VNG",
+            "TCVN_CST_BAYER_GB_TO_RGB_VNG",
+            "TCVN_CST_BGR_TO_HSV_FULL",
+            "TCVN_CST_RGB_TO_HSV_FULL",
+            "TCVN_CST_BGR_TO_HLS_FULL",
+            "TCVN_CST_RGB_TO_HLS_FULL",
+            "TCVN_CST_HSV_TO_BGR_FULL",
+            "TCVN_CST_HSV_TO_RGB_FULL",
+            "TCVN_CST_HLS_TO_BGR_FULL",
+            "TCVN_CST_HLS_TO_RGB_FULL",
+            "TCVN_CST_LBGR_TO_LAB",
+            "TCVN_CST_LRGB_TO_LAB",
+            "TCVN_CST_LBGR_TO_LUV",
+            "TCVN_CST_LRGB_TO_LUV",
+            "TCVN_CST_LAB_TO_LBGR",
+            "TCVN_CST_LAB_TO_LRGB",
+            "TCVN_CST_LUV_TO_LBGR",
+            "TCVN_CST_LUV_TO_LRGB",
+            "TCVN_CST_BGR_TO_YUV",
+            "TCVN_CST_RGB_TO_YUV",
+            "TCVN_CST_YUV_TO_BGR",
+            "TCVN_CST_YUV_TO_RGB",
+            "TCVN_CST_BAYER_RG_TO_GRAY",
+            "TCVN_CST_BAYER_GR_TO_GRAY",
+            "TCVN_CST_BAYER_BG_TO_GRAY",
+            "TCVN_CST_BAYER_GB_TO_GRAY",
+            "TCVN_CST_YUV_420_NV12_TO_RGB",
+            "TCVN_CST_YUV_420_NV12_TO_BGR",
+            "TCVN_CST_YUV_420_NV21_TO_RGB",
+            "TCVN_CST_YUV_420_NV21_TO_BGR",
+            "TCVN_CST_YUV_420_SP_TO_RGB",
+            "TCVN_CST_YUV_420_SP_TO_BGR",
+            "TCVN_CST_YUV_420_NV12_TO_RGBA",
+            "TCVN_CST_YUV_420_NV12_TO_BGRA",
+            "TCVN_CST_YUV_420_NV21_TO_RGBA",
+            "TCVN_CST_YUV_420_NV21_TO_BGRA",
+            "TCVN_CST_YUV_420_SP_TO_RGBA",
+            "TCVN_CST_YUV_420_SP_TO_BGRA",
+            "TCVN_CST_YUV_420_YV12_TO_RGB",
+            "TCVN_CST_YUV_420_YV12_TO_BGR",
+            "TCVN_CST_YUV_420_IYUV_TO_RGB",
+            "TCVN_CST_YUV_420_IYUV_TO_BGR",
+            "TCVN_CST_YUV_420_I420_TO_RGB",
+            "TCVN_CST_YUV_420_I420_TO_BGR",
+            "TCVN_CST_YUV_420_P_TO_RGB",
+            "TCVN_CST_YUV_420_P_TO_BGR",
+            "TCVN_CST_YUV_420_YV12_TO_RGBA",
+            "TCVN_CST_YUV_420_YV12_TO_BGRA",
+            "TCVN_CST_YUV_420_IYUV_TO_RGBA",
+            "TCVN_CST_YUV_420_IYUV_TO_BGRA",
+            "TCVN_CST_YUV_420_I420_TO_RGBA",
+            "TCVN_CST_YUV_420_I420_TO_BGRA",
+            "TCVN_CST_YUV_420_P_TO_RGBA",
+            "TCVN_CST_YUV_420_P_TO_BGRA",
+            "TCVN_CST_YUV_420_TO_GRAY",
+            "TCVN_CST_YUV_420_NV21_TO_GRAY",
+            "TCVN_CST_YUV_420_NV12_TO_GRAY",
+            "TCVN_CST_YUV_420_YV12_TO_GRAY",
+            "TCVN_CST_YUV_420_IYUV_TO_GRAY",
+            "TCVN_CST_YUV_420_I420_TO_GRAY",
+            "TCVN_CST_YUV_420_SP_TO_GRAY",
+            "TCVN_CST_YUV_420_P_TO_GRAY",
+            "TCVN_CST_YUV_422_UYVY_TO_RGB",
+            "TCVN_CST_YUV_422_UYVY_TO_BGR",
+            "TCVN_CST_YUV_422_Y422_TO_RGB",
+            "TCVN_CST_YUV_422_Y422_TO_BGR",
+            "TCVN_CST_YUV_422_UYNV_TO_RGB",
+            "TCVN_CST_YUV_422_UYNV_TO_BGR",
+            "TCVN_CST_YUV_422_UYVY_TO_RGBA",
+            "TCVN_CST_YUV_422_UYVY_TO_BGRA",
+            "TCVN_CST_YUV_422_Y422_TO_RGBA",
+            "TCVN_CST_YUV_422_Y422_TO_BGRA",
+            "TCVN_CST_YUV_422_UYNV_TO_RGBA",
+            "TCVN_CST_YUV_422_UYNV_TO_BGRA",
+            "TCVN_CST_YUV_422_YUY2_TO_RGB",
+            "TCVN_CST_YUV_422_YUY2_TO_BGR",
+            "TCVN_CST_YUV_422_YVYU_TO_RGB",
+            "TCVN_CST_YUV_422_YVYU_TO_BGR",
+            "TCVN_CST_YUV_422_YUYV_TO_RGB",
+            "TCVN_CST_YUV_422_YUYV_TO_BGR",
+            "TCVN_CST_YUV_422_YUNV_TO_RGB",
+            "TCVN_CST_YUV_422_YUNV_TO_BGR",
+            "TCVN_CST_YUV_422_YUY2_TO_RGBA",
+            "TCVN_CST_YUV_422_YUY2_TO_BGRA",
+            "TCVN_CST_YUV_422_YVYU_TO_RGBA",
+            "TCVN_CST_YUV_422_YVYU_TO_BGRA",
+            "TCVN_CST_YUV_422_YUYV_TO_RGBA",
+            "TCVN_CST_YUV_422_YUYV_TO_BGRA",
+            "TCVN_CST_YUV_422_YUNV_TO_RGBA",
+            "TCVN_CST_YUV_422_YUNV_TO_BGRA",
+            "TCVN_CST_YUV_422_UYVY_TO_GRAY",
+            "TCVN_CST_YUV_422_YUY2_TO_GRAY",
+            "TCVN_CST_YUV_422_Y422_TO_GRAY",
+            "TCVN_CST_YUV_422_UYNV_TO_GRAY",
+            "TCVN_CST_YUV_422_YVYU_TO_GRAY",
+            "TCVN_CST_YUV_422_YUYV_TO_GRAY",
+            "TCVN_CST_YUV_422_YUNV_TO_GRAY",
+            "TCVN_CST_RGBA_TO_PREMULTIPLICATED_RGBA",
+            "TCVN_CST_PREMULTIPLICATED_RGBA_TO_RGBA",
+            "TCVN_CST_RGB_TO_YUV_420_I420",
+            "TCVN_CST_BGR_TO_YUV_420_I420",
+            "TCVN_CST_RGB_TO_YUV_420_IYUV",
+            "TCVN_CST_BGR_TO_YUV_420_IYUV",
+            "TCVN_CST_RGBA_TO_YUV_420_I420",
+            "TCVN_CST_BGRA_TO_YUV_420_I420",
+            "TCVN_CST_RGBA_TO_YUV_420_IYUV",
+            "TCVN_CST_BGRA_TO_YUV_420_IYUV",
+            "TCVN_CST_RGB_TO_YUV_420_YV12",
+            "TCVN_CST_BGR_TO_YUV_420_YV12",
+            "TCVN_CST_RGBA_TO_YUV_420_YV12",
+            "TCVN_CST_BGRA_TO_YUV_420_YV12",
+            "TCVN_CST_BAYER_RG_TO_BGR_EA",
+            "TCVN_CST_BAYER_GR_TO_BGR_EA",
+            "TCVN_CST_BAYER_BG_TO_BGR_EA",
+            "TCVN_CST_BAYER_GB_TO_BGR_EA",
+            "TCVN_CST_BAYER_RG_TO_RGB_EA",
+            "TCVN_CST_BAYER_GR_TO_RGB_EA",
+            "TCVN_CST_BAYER_BG_TO_RGB_EA",
+            "TCVN_CST_BAYER_GB_TO_RGB_EA",
+            "TCVN_CST_BAYER_RG_TO_BGRA",
+            "TCVN_CST_BAYER_GR_TO_BGRA",
+            "TCVN_CST_BAYER_BG_TO_BGRA",
+            "TCVN_CST_BAYER_GB_TO_BGRA",
+            "TCVN_CST_BAYER_RG_TO_RGBA",
+            "TCVN_CST_BAYER_GR_TO_RGBA",
+            "TCVN_CST_BAYER_BG_TO_RGBA",
+            "TCVN_CST_BAYER_GB_TO_RGBA",
+            "TCVN_CST_MAX"]
+        }
+    );
+}
+
+Node_F_VN_ConvertColorSpace.title = "F_VN_ConvertColorSpace";
+Node_F_VN_ConvertColorSpace.size = [410, 80];
+// Keep these lines for a best effort IntelliSense of Visual Studio 2017.
+/// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
+
+function Node_F_VN_GenerateColorMap() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1620,43 +1952,44 @@ function F_VN_GenerateColorMap() {
     );
 }
 
-F_VN_GenerateColorMap.size = [240, 80];
+Node_F_VN_GenerateColorMap.title = "F_VN_GenerateColorMap";
+Node_F_VN_GenerateColorMap.size = [240, 80];
 
 
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_InvertImageColor() {
+function Node_F_VN_InvertImageColor() {
 
     this.addInput("ipSrcImage", "ITcVnImage");
     this.addOutput("ipDestImage", "ITcVnImage");
 }
 
-
+Node_F_VN_InvertImageColor.title = "F_VN_InvertImageColor";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_NormalizeImage() {
+function Node_F_VN_NormalizeImage() {
 
     this.addInput("ipSrcImage", "ITcVnImage");
     this.addOutput("ipDestImage", "ITcVnImage");
 }
 
-
+Node_F_VN_NormalizeImage.title = "F_VN_NormalizeImage";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_FillHoles() {
+function Node_F_VN_FillHoles() {
 
     this.addInput("ipSrcImage", "ITcVnImage");
     this.addOutput("ipDestImage", "ITcVnImage");
 }
 
-
+Node_F_VN_FillHoles.title = "F_VN_FillHoles";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_GaussianFilter() {
+function Node_F_VN_GaussianFilter() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1681,11 +2014,11 @@ function F_VN_GaussianFilter() {
     );
 }
 
-
+Node_F_VN_GaussianFilter.title = "F_VN_GaussianFilter";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_MedianFilter() {
+function Node_F_VN_MedianFilter() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1703,11 +2036,11 @@ function F_VN_MedianFilter() {
 
 }
 
-
+Node_F_VN_MedianFilter.title = "F_VN_MedianFilter";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_Threshold() {
+function Node_F_VN_Threshold() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1759,29 +2092,30 @@ function F_VN_Threshold() {
     );
 }
 
-F_VN_Threshold.size = [320, 110];
+Node_F_VN_Threshold.title = "F_VN_Threshold";
+Node_F_VN_Threshold.size = [320, 110];
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function DragDropLocalTcVnImage() {
+function Node_DragDropLocalTcVnImage() {
     this.onPropertyChanged = updatePlc;
     this.addOutput("ipDestImage", "ITcVnImage");
-    this.properties = { url: "", width: 0, height: 0, bytes: 0, data: "" };
+    this.properties = { image: { filename: "", lastModified: "", url: "", height: 0, width: 0, sizeInBytes: 0, data: "" } };
 }
 
-DragDropLocalTcVnImage.title = "Image";
-DragDropLocalTcVnImage.desc = "Image loader";
-DragDropLocalTcVnImage.supported_extensions = ["jpg", "jpeg", "png", "gif", "bmp"];
+Node_DragDropLocalTcVnImage.title = "DragDropLocalTcVnImage";
+Node_DragDropLocalTcVnImage.desc = "Image loader";
+Node_DragDropLocalTcVnImage.supported_extensions = ["jpg", "jpeg", "png", "gif", "bmp"];
 
-DragDropLocalTcVnImage.prototype.onAdded = function () {
+Node_DragDropLocalTcVnImage.prototype.onAdded = function () {
 
-    if (this.properties["url"] != "" && this.img == null) {
-        this.loadImage(this.properties["url"]);
+    if (this.properties["image"].url != "" && this.img == null) {
+        this.loadImage(this.properties["image"].url);
     }
 
 };
 
-DragDropLocalTcVnImage.prototype.onDrawBackground = function (ctx) {
+Node_DragDropLocalTcVnImage.prototype.onDrawBackground = function (ctx) {
 
     if (this.flags.collapsed) {
         return;
@@ -1791,7 +2125,7 @@ DragDropLocalTcVnImage.prototype.onDrawBackground = function (ctx) {
     }
 };
 
-DragDropLocalTcVnImage.prototype.loadImage = function (url, callback) {
+Node_DragDropLocalTcVnImage.prototype.loadImage = function (url, callback) {
 
     if (url == "") {
         this.img = null;
@@ -1809,28 +2143,35 @@ DragDropLocalTcVnImage.prototype.loadImage = function (url, callback) {
 
     this.img.onload = function () {
 
+        var image = {};
+
         that.size[1] = ((that.img.height / that.img.width) * that.size[0]) + 30;
 
-        that.setProperty("width", that.img.width);
-        that.setProperty("height", that.img.height);
+        image.width = that.img.width;
+        image.height = that.img.height;
 
         var canvas = new OffscreenCanvas(that.img.width, that.img.height)
         var ctx = canvas.getContext("2d");
         ctx.drawImage(that.img, 0, 0, that.img.width, that.img.height);
 
-        var imageDataArray = ctx.getImageData(0, 0, that.img.width, that.img.height).data;
+        var imageData = ctx.getImageData(0, 0, that.img.width, that.img.height).data;
 
-        var binaryString = "";
-        var bytes = 0;
+        var i = 0;
+        var imageDataWithOnly3Channels = [];
 
-        imageDataArray.forEach(function (value) {
-            binaryString += String.fromCharCode(value);
-            bytes++;
-        });
+        for (i = 0; i < imageData.length; i++) {
+            if ((i + 1) % 4 != 0) {
+                imageDataWithOnly3Channels.push(imageData[i]);
+            }       
+        }
 
-        that.setProperty("data", base64encode(binaryString));
-        that.setProperty("bytes", bytes);
+        image.channels = 3;
+        image.pixelType = "TCVN_ET_USINT";
+        image.sizeInBytes = imageDataWithOnly3Channels.length;
+        image.data = bytesToBase64(imageDataWithOnly3Channels);
 
+        that.setProperty("image", image);
+       
         if (callback) {
             callback(this);
         }
@@ -1845,37 +2186,40 @@ DragDropLocalTcVnImage.prototype.loadImage = function (url, callback) {
 
 };
 
-DragDropLocalTcVnImage.prototype.onWidget = function (e, widget) {
+Node_DragDropLocalTcVnImage.prototype.onWidget = function (e, widget) {
 
     if (widget.name == "load") {
-        this.loadImage(this.properties["url"]);
+        this.loadImage(this.properties["image"].url);
     }
 
 };
 
-DragDropLocalTcVnImage.prototype.onDropFile = function (file) {
+Node_DragDropLocalTcVnImage.prototype.onDropFile = function (file) {
+
+    console.log(file);
 
     if (this._url) {
         URL.revokeObjectURL(this._url);
     }
 
     this._url = URL.createObjectURL(file);
-    this.setProperty("url", this._url)
+    this.properties["image"].filename = file.name;
+    this.properties["image"].lastModified = file.lastModified.toString();
+    this.properties["image"].url = this._url;
     this.loadImage(this._url);
 
 };
-
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function ViewITcVnImage() {
+function Node_ViewITcVnImage() {
 
     this.addInput("ipSrcImage", "ITcVnImage");
     this.image = new Image();
 
 }
 
-ViewITcVnImage.prototype.onDrawForeground = function (ctx) {
+Node_ViewITcVnImage.prototype.onDrawForeground = function (ctx) {
 
     if (!this.flags.collapsed) {
         if (this.image.hasAttribute("src")) {
@@ -1884,7 +2228,7 @@ ViewITcVnImage.prototype.onDrawForeground = function (ctx) {
     }
 };
 
-ViewITcVnImage.prototype.onStatusUpdate = function (status) {
+Node_ViewITcVnImage.prototype.onStatusUpdate = function (status) {
 
     if (typeof status == 'undefined' && !status) {
         return;
@@ -1898,11 +2242,12 @@ ViewITcVnImage.prototype.onStatusUpdate = function (status) {
     this.setDirtyCanvas(true, false);
 };
 
-ViewITcVnImage.size = [330, 200];
+Node_ViewITcVnImage.title = "ViewITcVnImage";
+Node_ViewITcVnImage.size = [330, 200];
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_DetectBlobs() {
+function Node_F_VN_DetectBlobs() {
 
     this.addInput("ipSrcImage", "ITcVnImage");
     this.addInput("stParams", "TcVnParamsBlobDetection");
@@ -1910,11 +2255,11 @@ function F_VN_DetectBlobs() {
     
 }
 
-
+Node_F_VN_DetectBlobs.title = "F_VN_DetectBlobs";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function F_VN_MatchTemplate() {
+function Node_F_VN_MatchTemplate() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1923,11 +2268,11 @@ function F_VN_MatchTemplate() {
     this.addOutput("ipDestImage", "ITcVnImage");
 }
 
-
+Node_F_VN_MatchTemplate.title = "F_VN_MatchTemplate";
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017.
 /// <reference path="../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.742.5/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-function TcVnParamsBlobDetection() {
+function Node_TcVnParamsBlobDetection() {
 
     this.onPropertyChanged = updatePlc;
 
@@ -1958,26 +2303,15 @@ function TcVnParamsBlobDetection() {
 
 }
 
-TcVnParamsBlobDetection.size = [400, 565];
+Node_TcVnParamsBlobDetection.title = "TcVnParamsBlobDetection";
+Node_TcVnParamsBlobDetection.size = [400, 565];
 // Example node ------------------------------------------------------------------------
 
-function SandpitNode() {
-
-    this.onPropertyChanged = updatePlc;
-
-    this.addInput("ipSrcImage", "ITcVnImage");
-    this.addOutput("ipDestImage", "ITcVnImage");
-    this.properties = { demoValue: 3};
-
-    this.number = this.addWidget(
-        "number",
-        "Demo Value",
-        3,
-        function (v) { },
-        { property: "demoValue", min: 0, max: 1000 }
-    );
-
-};
+function Node_Multiply() {};
+function Node_Divide() {};
+function Node_Sin() {};
+function Node_Cos() {};
+function Node_Concat() {};
 
 // Example node registration -----------------------------------------------------------
 
@@ -1987,9 +2321,13 @@ var SandpitNodePack = (function () {
 
         RegisterWithGraph: function (GraphFramework) {
 
-             GraphFramework.registerNodeType("Sandpit/SandpitNode", SandpitNode);
+             GraphFramework.registerNodeType("Numbers/Node_Multiply", Node_Multiply);
+             GraphFramework.registerNodeType("Numbers/Node_Divide", Node_Divide);
+             GraphFramework.registerNodeType("Numbers/Trigonometry/Node_Sin", Node_Sin);
+             GraphFramework.registerNodeType("Numbers/Trigonometry/Node_Cos", Node_Cos);
+             GraphFramework.registerNodeType("Strings/Concat", Node_Concat);
         
-            }
+        }
     }
 })();
 

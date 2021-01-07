@@ -18,8 +18,8 @@ var updatePlc = function () {
 
 GraphFrameworkCustomisation.Initialise(LiteGraph);
 SandpitNodePack.RegisterWithGraph(LiteGraph);
-DebugNodePack.RegisterWithGraph(LiteGraph);
-VisionNodePack.RegisterWithGraph(LiteGraph);
+//DebugNodePack.RegisterWithGraph(LiteGraph);
+//VisionNodePack.RegisterWithGraph(LiteGraph);
 
 graph.onNodeAdded = configurePlc;
 graph.onNodeRemoved = configurePlc;
@@ -32,8 +32,3 @@ canvas.resize();
 window.addEventListener("resize", function () { canvas.resize(); });
 
 graph.start();
-
-// add nodes here if you need them to auto show (handy when working on a single node)
-
-var node = LiteGraph.createNode('Sandpit/SandpitNode');
-canvas.graph.add(node);
