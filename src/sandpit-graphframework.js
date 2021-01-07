@@ -37,7 +37,8 @@ LGraphCanvas.onMenuAdd = function (node, options, e, prev_menu, callback) {
         }
 
         const baseCategory = node.value + "/";
-        let moreDirectories = LiteGraph.getNodeTypesCategories().filter(cats => cats.indexOf(baseCategory) === 0);
+        const moreDirectories = LiteGraph.getNodeTypesCategories().filter(cats => cats.indexOf(baseCategory) === 0);
+      //   const modifiedArr = moreDirectories.map(name => name.substr(0,baseCategory.length));
 
         var entries = [];
         for (var i = 0; i < values.length; i++) {
@@ -46,7 +47,7 @@ LGraphCanvas.onMenuAdd = function (node, options, e, prev_menu, callback) {
                 if (name.indexOf("::") != -1) //in case it has a namespace like "shader::math/rand" it hides the namespace
                     name = name.split("::")[1];
                 if (name.indexOf("/") != -1) //in case it has a namespace like "shader::math/rand" it hides the namespace
-                    name = name.split("/")[1];
+                    name = name.split("/")[0];
                 entries.push({ value: moreDirectories[i], content: name, has_submenu: true });
             }
         }
