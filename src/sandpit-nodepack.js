@@ -2,19 +2,13 @@
 
 function SandpitNode() {
 
-    this.onPropertyChanged = updatePlc;
+    this.addInput("myInput1", "BOOL");
+    this.addInput("myInput2", "BOOL");
+    this.addInput("myInput3", "BOOL");
+    this.addOutput("myOutput", "BOOL");
 
-    this.addInput("ipSrcImage", "ITcVnImage");
-    this.addOutput("ipDestImage", "ITcVnImage");
-    this.properties = { demoValue: 3};
-
-    this.number = this.addWidget(
-        "number",
-        "Demo Value",
-        3,
-        function (v) { },
-        { property: "demoValue", min: 0, max: 1000 }
-    );
+    this.addPropertyWithNumberWidget("myInt1", "nFilterWidth", 3, 1, 999, 0, 2);
+    this.addPropertyWithNumberWidget("myInt2", "nFilterHeight", 3, 1, 999, 0, 2);
 
 };
 

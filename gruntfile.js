@@ -13,17 +13,23 @@ module.exports = function (grunt) {
     concat: {
       build: {
         src: [
+          './vision-toolkit/src/vision-toolkit-hmi/Imports/base64/Base64.js',
+          './vision-toolkit/src/vision-toolkit-hmi/Imports/json-viewer/json-viewer.js',
+          './vision-toolkit/src/vision-toolkit-hmi/Imports/uuid-gen/UuidGen.js',
           './src/sandpit-tchmi.js',
-          './vision-toolkit/vision-toolkit-hmi/GraphFramework/**.js',
-          './vision-toolkit/vision-toolkit-hmi/GraphFramework/*/**.js',
-          './vision-toolkit/vision-toolkit-hmi/GraphFramework/*/*/**.js',
+          './vision-toolkit/src/vision-toolkit-hmi/lib/**.js',
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/**.js',
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/*/**.js',
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/*/*/**.js',
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/*/*/*/**.js', 
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/*/*/*/*/**.js', 
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/*/*/*/*/*/**.js', 
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/*/*/*/*/*/*/**.js', 
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/*/*/*/*/*/*/*/**.js', 
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/*/*/*/*/*/*/*/*/**.js', 
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/*/*/*/*/*/*/*/*/*/**.js', 
+          './vision-toolkit/src/vision-toolkit-hmi/lib/*/*/*/*/*/*/*/*/*/*/*/**.js', 
           './src/sandpit-graphframework.js',
-          './vision-toolkit/vision-toolkit-hmi/NodePacks/**.js', 
-          './vision-toolkit/vision-toolkit-hmi/NodePacks/*/**.js', 
-          './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/**.js', 
-          './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/*/**.js', 
-          './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/*/*/**.js', 
-          './vision-toolkit/vision-toolkit-hmi/NodePacks/*/*/*/*/*/**.js', 
           './src/sandpit-nodepack.js'
           ],
         dest: './public/vision-toolkit.js'

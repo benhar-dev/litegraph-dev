@@ -13,3 +13,17 @@ TcHmi.Server.writeSymbol = function (symbolName, symbolValue) {
     // console.log(symbolName);
     // console.log(symbolValue);
 };
+
+TcHmi.Server.isWebsocketReady = function () {
+    // console.log('TcHmi: isWebsocketReady');
+    return true;
+}
+
+
+TcHmi.Server.subscribeEx = function(commands, interval, options, callback){
+    // console.log('TcHmi: subscribeEx');
+    // console.log(commands);
+    // console.log(interval);
+    // console.log(options);
+    // console.log(callback);
+};
